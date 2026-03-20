@@ -1,0 +1,36 @@
+# Dependencies
+node_modules
+
+# Env (CLAVE)
+.env
+.env.*
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build (si usas TS)
+dist
+build
+
+# Uploads (opcional, pero recomendado)
+uploads
+
+# OS / Editor
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Misc
+coverage
+.tmp
+.cache
