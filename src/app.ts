@@ -14,7 +14,7 @@ export function createApp() {
   const app = express();
 
   /*
-   CORS CONFIG (IMPORTANTE)
+   CORS CONFIG (FIX REAL)
   */
 
   const allowedOrigins = [
@@ -25,38 +25,26 @@ export function createApp() {
     "https://www.decantsloncoche.cl"
   ];
 
-  app.use(
-    cors({
-      origin: (origin, callback) => {
-        // Permitir requests sin origin (Postman, curl)
-        if (!origin) return callback(null, true);
+  const corsOptions: cors.CorsOptions = {
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
 
-        if (allowedOrigins.includes(origin)) {
-          return callback(null, true);
-        } else {
-          return callback(null, true); // 👈 temporalmente abierto (puedes restringir después)
-        }
-      },
-      credentials: true,
-    })
-  );
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
 
-  /*
-   HEADERS EXTRA (evita problemas raros)
-  */
+      // 👇 temporalmente abierto (puedes cerrar después)
+      return callback(null, true);
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true
+  };
 
-  app.use((_, res, next) => {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header(
-      "Access-Control-Allow-Headers",
-      "Origin, X-Requested-With, Content-Type, Accept, Authorization"
-    );
-    res.header(
-      "Access-Control-Allow-Methods",
-      "GET, POST, PUT, DELETE, PATCH, OPTIONS"
-    );
-    next();
-  });
+  app.use(cors(corsOptions));
+
+  // 🔥 CLAVE: manejar preflight (esto te estaba fallando)
+  app.options("*", cors(corsOptions));
 
   /*
    BODY PARSER
