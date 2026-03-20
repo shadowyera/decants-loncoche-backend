@@ -14,7 +14,7 @@ export function createApp() {
   const app = express();
 
   /*
-   CORS CONFIG (FIX REAL)
+   CORS CONFIG
   */
 
   const allowedOrigins = [
@@ -33,7 +33,7 @@ export function createApp() {
         return callback(null, true);
       }
 
-      // 👇 temporalmente abierto (puedes cerrar después)
+      // 🔥 abierto (luego puedes restringir)
       return callback(null, true);
     },
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
@@ -43,8 +43,11 @@ export function createApp() {
 
   app.use(cors(corsOptions));
 
-  // 🔥 CLAVE: manejar preflight (esto te estaba fallando)
-  app.options("*", cors(corsOptions));
+  /*
+   ⚠️ IMPORTANTE:
+   Express 5 ya maneja OPTIONS automáticamente con cors()
+   👉 NO usar app.options("*")
+  */
 
   /*
    BODY PARSER
@@ -53,7 +56,7 @@ export function createApp() {
   app.use(express.json());
 
   /*
-   SERVIR ARCHIVOS ESTÁTICOS
+   STATIC FILES
   */
 
   app.use(
