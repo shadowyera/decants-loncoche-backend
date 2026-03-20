@@ -1,7 +1,7 @@
 import { Router } from "express"
 
 import { authMiddleware } from "../../shared/middleware/auth.middleware"
-
+import { upload } from "../../shared/config/multerCloudinary"
 /* =========================================================
    PERFUME CONTROLLERS
 ========================================================= */
@@ -61,6 +61,7 @@ router.use(authMiddleware)
  */
 router.post(
   "/perfumes",
+  upload.single("imagen"),
   crearPerfumeAdminController
 )
 

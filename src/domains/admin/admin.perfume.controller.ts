@@ -20,7 +20,12 @@ export async function crearPerfumeAdminController(
 
   try {
 
-    const perfume = await crearPerfume(req.body)
+    const imagen = req.file?.path
+
+    const perfume = await crearPerfume({
+      ...req.body,
+      imagen
+    })
 
     res.status(201).json(perfume)
 

@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import path from "path";
+// import path from "path"; ❌ ya no necesario si eliminas uploads
 
 import { errorMiddleware } from "./shared/middleware/error.middleware";
 
@@ -33,8 +33,7 @@ export function createApp() {
         return callback(null, true);
       }
 
-      // 🔥 abierto (luego puedes restringir)
-      return callback(null, true);
+      return callback(null, true); // abierto por ahora
     },
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -44,25 +43,19 @@ export function createApp() {
   app.use(cors(corsOptions));
 
   /*
-   ⚠️ IMPORTANTE:
-   Express 5 ya maneja OPTIONS automáticamente con cors()
-   👉 NO usar app.options("*")
-  */
-
-  /*
    BODY PARSER
   */
 
   app.use(express.json());
 
   /*
-   STATIC FILES
+   ⚠️ uploads ya no necesarios con Cloudinary
   */
 
-  app.use(
-    "/uploads",
-    express.static(path.resolve(process.cwd(), "uploads"))
-  );
+  // app.use(
+  //   "/uploads",
+  //   express.static(path.resolve(process.cwd(), "uploads"))
+  // );
 
   /*
    HEALTH CHECK

@@ -1,7 +1,7 @@
 import mongoose from "mongoose"
 import bcrypt from "bcrypt"
 import process from "process"
-
+import "dotenv/config"
 import { UsuarioModel } from "../domains/usuario/usuario.model"
 
 async function seedAdmin() {
