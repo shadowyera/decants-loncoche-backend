@@ -1,32 +1,67 @@
 import mongoose from "mongoose"
 import bcrypt from "bcrypt"
-
-import { UsuarioModel } from "../domains/usuario/usuario.model"
 import process from "process"
 
+import { UsuarioModel } from "../domains/usuario/usuario.model"
+
 async function seedAdmin() {
+  try {
+    /* =========================
+       VALIDACIÓN ENV
+    ========================= */
 
-  await mongoose.connect(process.env.MONGO_URI || "mongodb+srv://shadowyera_db_user:CGmO9UxZit69venB@decantsloncoche.twqzily.mongodb.net/decants-loncoche")
+    const mongoUri = process.env.MONGO_URI
+    const adminEmail = process.env.ADMIN_EMAIL
+    const adminPassword = process.env.ADMIN_PASSWORD
 
-  const existe = await UsuarioModel.findOne({
-    email: "admin@decants.cl"
-  })
+    if (!mongoUri) {
+      throw new Error("Falta MONGO_URI en .env")
+    }
 
-  if (existe) {
-    console.log("Admin ya existe")
-    process.exit()
+    if (!adminEmail || !adminPassword) {
+      throw new Error("Faltan ADMIN_EMAIL o ADMIN_PASSWORD en .env")
+    }
+
+    /* =========================
+       CONEXIÓN DB
+    ========================= */
+
+    await mongoose.connect(mongoUri)
+    console.log("Mongo conectado")
+
+    /* =========================
+       CHECK EXISTENTE
+    ========================= */
+
+    const existe = await UsuarioModel.findOne({
+      email: adminEmail
+    })
+
+    if (existe) {
+      console.log("Admin ya existe, no se crea otro")
+      process.exit(0)
+    }
+
+    /* =========================
+       CREAR ADMIN
+    ========================= */
+
+    const passwordHash = await bcrypt.hash(adminPassword, 10)
+
+    await UsuarioModel.create({
+      email: adminEmail,
+      password: passwordHash,
+      role: "ADMIN"
+    })
+
+    console.log("Admin creado correctamente")
+
+    process.exit(0)
+
+  } catch (error) {
+    console.error("Error en seedAdmin:", error)
+    process.exit(1)
   }
-
-  const passwordHash = await bcrypt.hash("admin123", 10)
-
-  await UsuarioModel.create({
-    email: "admin@decants.cl",
-    password: passwordHash,
-    role: "ADMIN"
-  })
-
-  console.log("Admin creado")
-  process.exit()
 }
 
 seedAdmin()
