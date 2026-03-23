@@ -40,6 +40,8 @@ import {
   cancelarPedidoController
 } from "./admin.pedido.controller"
 
+import { getAdminDashboard } from "./admin.dashboard.controller"
+
 const router = Router()
 
 /* =========================================================
@@ -219,5 +221,13 @@ router.post(
   "/pedidos/:id/cancelar",
   cancelarPedidoController
 )
+
+/**
+ * Dashboard
+ */
+router.get("/dashboard", 
+  getAdminDashboard
+)
+
 
 export default router
