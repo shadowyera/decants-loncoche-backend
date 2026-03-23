@@ -281,3 +281,26 @@ export async function listarPedidosAdmin(
   }
 
 }
+
+export async function anularPedido(pedidoId: string) {
+
+  const pedido = await PedidoModel.findById(pedidoId)
+
+  if (!pedido) {
+    throw new ApiError(404, "Pedido no encontrado")
+  }
+
+  if (pedido.estado !== ESTADO_PEDIDO.PAGADO) {
+    throw new ApiError(400, "Solo se pueden anular pedidos pagados")
+  }
+
+  for (const item of pedido.items) {
+    await liberarStock(item.decantId.toString(), item.cantidad)
+  }
+
+  pedido.estado = ESTADO_PEDIDO.ANULADO
+
+  await pedido.save()
+
+  return pedido
+}

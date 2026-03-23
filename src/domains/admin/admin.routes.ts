@@ -2,6 +2,7 @@ import { Router } from "express"
 
 import { authMiddleware } from "../../shared/middleware/auth.middleware"
 import { upload } from "../../shared/config/multerCloudinary"
+
 /* =========================================================
    PERFUME CONTROLLERS
 ========================================================= */
@@ -37,7 +38,8 @@ import {
   listarPedidosAdminController,
   iniciarPedidoController,
   confirmarPedidoController,
-  cancelarPedidoController
+  cancelarPedidoController,
+  anularPedidoController
 } from "./admin.pedido.controller"
 
 import { getAdminDashboard } from "./admin.dashboard.controller"
@@ -49,8 +51,6 @@ const router = Router()
 ========================================================= */
 
 router.use(authMiddleware)
-
-
 
 
 
@@ -111,8 +111,6 @@ router.patch(
   "/perfumes/:id/estado",
   cambiarEstadoPerfumeAdminController
 )
-
-
 
 
 
@@ -178,17 +176,13 @@ router.get(
 
 
 
-
-
 /* =========================================================
    PEDIDOS
 ========================================================= */
 
 /**
- * Listar pedidos (PAGINADO)
- * 
+ * Listar pedidos (paginado)
  * Query params:
- * 
  * /admin/pedidos?page=1&limit=10
  */
 router.get(
@@ -216,6 +210,7 @@ router.post(
 
 /**
  * Cancelar pedido
+ * Solo aplica si no está pagado
  */
 router.post(
   "/pedidos/:id/cancelar",
@@ -223,11 +218,23 @@ router.post(
 )
 
 /**
- * Dashboard
+ * Anular pedido
+ * Revierte una venta ya pagada
  */
-router.get("/dashboard", 
-  getAdminDashboard
+router.post(
+  "/pedidos/:id/anular",
+  anularPedidoController
 )
 
+
+
+/* =========================================================
+   DASHBOARD
+========================================================= */
+
+router.get(
+  "/dashboard",
+  getAdminDashboard
+)
 
 export default router
