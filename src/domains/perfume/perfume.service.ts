@@ -26,19 +26,33 @@ function generarSlugPerfume(marca: string, nombre: string) {
 }
 
 function calcularFamilias(notas?: string[]) {
-  if (!notas || notas.length === 0) {
-    return []
-  }
-
+  if (!notas || notas.length === 0) return []
   return clasificarFamilias(notas)
+}
+
+/**
+ * 🔥 SKU ÚNICO (ANTI COLISIONES)
+ */
+async function generarSkuUnico(marca: string, nombre: string) {
+  const base = generarSkuPerfume(marca, nombre)
+
+  let sku = base
+  let contador = 1
+
+  while (true) {
+    const existe = await PerfumeModel.exists({ baseSku: sku })
+
+    if (!existe) return sku
+
+    sku = `${base}-${contador}`
+    contador++
+  }
 }
 
 /**
  * Calcula cuantos ml están reservados por decants
  */
-
 function calcularMlReservados(decants: any[]) {
-
   let total = 0
 
   for (const decant of decants) {
@@ -46,7 +60,6 @@ function calcularMlReservados(decants: any[]) {
   }
 
   return total
-
 }
 
 /* ===============================
@@ -57,40 +70,29 @@ export async function crearPerfume(data: CrearPerfumeInput) {
 
   const slug = generarSlugPerfume(data.marca, data.nombre)
 
-  const baseSku = generarSkuPerfume(data.marca, data.nombre)
-
-  const [existeSlug, existeSku] = await Promise.all([
-    PerfumeModel.findOne({ slug }),
-    PerfumeModel.findOne({ baseSku })
-  ])
+  const existeSlug = await PerfumeModel.findOne({ slug })
 
   if (existeSlug) {
     throw new ApiError(400, "El perfume ya existe")
   }
 
-  if (existeSku) {
-    throw new ApiError(400, "SKU base ya existe para otro perfume")
-  }
+  // 🔥 SKU GENERADO Y GARANTIZADO ÚNICO
+  const baseSku = await generarSkuUnico(data.marca, data.nombre)
 
   const familiasOlfativas = calcularFamilias(data.notas)
 
   const perfume = await PerfumeModel.create({
-
     ...data,
-
     slug,
     baseSku,
     familiasOlfativas,
 
     /* defaults negocio */
-
     mlBotella: data.mlBotella ?? 100,
     multiplicadorDecant: data.multiplicadorDecant ?? 1.8
-
   })
 
   return perfume
-
 }
 
 /* ===============================
@@ -98,12 +100,10 @@ export async function crearPerfume(data: CrearPerfumeInput) {
 =============================== */
 
 export async function listarPerfumes() {
-
   return PerfumeModel
     .find()
     .sort({ createdAt: -1 })
     .lean()
-
 }
 
 /* ===============================
@@ -121,7 +121,6 @@ export async function obtenerPerfumePorSlug(slug: string) {
   }
 
   return perfume
-
 }
 
 /* ===============================
@@ -139,7 +138,6 @@ export async function obtenerPerfumePorId(id: string) {
   }
 
   return perfume
-
 }
 
 /* ===============================
@@ -157,11 +155,7 @@ export async function actualizarPerfume(
     throw new ApiError(404, "Perfume no encontrado")
   }
 
-  /* actualizar campos */
-
   Object.assign(perfume, data)
-
-  /* recalcular familias si cambian notas */
 
   if (data.notas) {
     perfume.familiasOlfativas = clasificarFamilias(data.notas)
@@ -170,7 +164,6 @@ export async function actualizarPerfume(
   await perfume.save()
 
   return perfume
-
 }
 
 /* ===============================
@@ -190,7 +183,6 @@ export async function cambiarEstadoPerfume(id: string) {
   await perfume.save()
 
   return perfume
-
 }
 
 /* ===============================
@@ -219,7 +211,6 @@ export async function obtenerDetallePerfumeAdmin(
   =============================== */
 
   const mlBotella = perfume.mlBotella ?? 100
-
   const mlReservados = calcularMlReservados(decants)
 
   const mlDisponibles = Math.max(
@@ -238,18 +229,14 @@ export async function obtenerDetallePerfumeAdmin(
     const tamaños = [3, 5, 10, 15]
 
     sugerenciasDecants = tamaños.map((ml) => ({
-
       ml,
-
       precioSugerido: sugerirPrecioDecant({
         precioBotella: perfume.precioBotella!,
         mlBotella,
         multiplicador: perfume.multiplicadorDecant ?? 1.8,
         mlDecant: ml
       })
-
     }))
-
   }
 
   return {
@@ -258,5 +245,4 @@ export async function obtenerDetallePerfumeAdmin(
     sugerenciasDecants,
     mlDisponibles
   }
-
 }
