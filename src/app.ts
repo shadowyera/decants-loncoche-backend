@@ -12,10 +12,6 @@ import "./jobs/pedidos.cron";
 export function createApp() {
   const app = express();
 
-  /*
-   CORS CONFIG
-  */
-
   const allowedOrigins = [
     "http://localhost:5173",
     "http://localhost:3000",
@@ -26,23 +22,25 @@ export function createApp() {
 
   const corsOptions: cors.CorsOptions = {
     origin: (origin, callback) => {
-      // Permitir requests sin origin (Postman, mobile apps, etc)
+      // Permitir requests sin origin (Postman, curl, apps móviles)
       if (!origin) return callback(null, true);
 
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, origin); // 🔥 CLAVE: devolver el origin exacto
+      // Normalizar por si viene con slash final
+      const normalizedOrigin = origin.replace(/\/$/, "");
+
+      if (allowedOrigins.includes(normalizedOrigin)) {
+        return callback(null, true);
       }
 
-      return callback(new Error("Not allowed by CORS")); // ❌ bloquear lo no permitido
+      console.warn("❌ CORS bloqueado para:", origin);
+      return callback(new Error("Not allowed by CORS"));
     },
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true
+    credentials: true,
   };
 
   app.use(cors(corsOptions));
-
-  // ⚠️ IMPORTANTE: preflight requests (OPTIONS)
   app.options("*", cors(corsOptions));
 
   /*
