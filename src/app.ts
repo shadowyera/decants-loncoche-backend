@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+// import path from "path"; ❌ ya no necesario si eliminas uploads
 
 import { errorMiddleware } from "./shared/middleware/error.middleware";
 
@@ -12,6 +13,10 @@ import "./jobs/pedidos.cron";
 export function createApp() {
   const app = express();
 
+  /*
+   CORS CONFIG
+  */
+
   const allowedOrigins = [
     "http://localhost:5173",
     "http://localhost:3000",
@@ -22,35 +27,40 @@ export function createApp() {
 
   const corsOptions: cors.CorsOptions = {
     origin: (origin, callback) => {
-      // Permitir requests sin origin (Postman, curl, apps móviles)
       if (!origin) return callback(null, true);
 
-      // Normalizar por si viene con slash final
-      const normalizedOrigin = origin.replace(/\/$/, "");
-
-      if (allowedOrigins.includes(normalizedOrigin)) {
+      if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
 
-      console.warn("❌ CORS bloqueado para:", origin);
-      return callback(new Error("Not allowed by CORS"));
+      return callback(null, true); // abierto por ahora
     },
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
+    credentials: true
   };
 
   app.use(cors(corsOptions));
-  app.options("*", cors(corsOptions));
 
   /*
    BODY PARSER
   */
+
   app.use(express.json());
+
+  /*
+   ⚠️ uploads ya no necesarios con Cloudinary
+  */
+
+  // app.use(
+  //   "/uploads",
+  //   express.static(path.resolve(process.cwd(), "uploads"))
+  // );
 
   /*
    HEALTH CHECK
   */
+
   app.get("/health", (_, res) => {
     res.json({ status: "ok" });
   });
@@ -58,6 +68,7 @@ export function createApp() {
   /*
    API ROUTES
   */
+
   app.use("/api/catalogo", catalogoRoutes);
   app.use("/api/pedidos", pedidoRoutes);
   app.use("/api/auth", authRoutes);
@@ -66,6 +77,7 @@ export function createApp() {
   /*
    404
   */
+
   app.use((_, res) => {
     res.status(404).json({ error: "Route not found" });
   });
@@ -73,6 +85,7 @@ export function createApp() {
   /*
    ERROR HANDLER
   */
+
   app.use(errorMiddleware);
 
   return app;
