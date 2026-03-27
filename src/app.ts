@@ -1,6 +1,5 @@
 import express from "express";
 import cors from "cors";
-// import path from "path"; ❌ ya no necesario si eliminas uploads
 
 import { errorMiddleware } from "./shared/middleware/error.middleware";
 
@@ -27,13 +26,14 @@ export function createApp() {
 
   const corsOptions: cors.CorsOptions = {
     origin: (origin, callback) => {
+      // Permitir requests sin origin (Postman, mobile apps, etc)
       if (!origin) return callback(null, true);
 
       if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
+        return callback(null, origin); // 🔥 CLAVE: devolver el origin exacto
       }
 
-      return callback(null, true); // abierto por ahora
+      return callback(new Error("Not allowed by CORS")); // ❌ bloquear lo no permitido
     },
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -42,25 +42,17 @@ export function createApp() {
 
   app.use(cors(corsOptions));
 
+  // ⚠️ IMPORTANTE: preflight requests (OPTIONS)
+  app.options("*", cors(corsOptions));
+
   /*
    BODY PARSER
   */
-
   app.use(express.json());
-
-  /*
-   ⚠️ uploads ya no necesarios con Cloudinary
-  */
-
-  // app.use(
-  //   "/uploads",
-  //   express.static(path.resolve(process.cwd(), "uploads"))
-  // );
 
   /*
    HEALTH CHECK
   */
-
   app.get("/health", (_, res) => {
     res.json({ status: "ok" });
   });
@@ -68,7 +60,6 @@ export function createApp() {
   /*
    API ROUTES
   */
-
   app.use("/api/catalogo", catalogoRoutes);
   app.use("/api/pedidos", pedidoRoutes);
   app.use("/api/auth", authRoutes);
@@ -77,7 +68,6 @@ export function createApp() {
   /*
    404
   */
-
   app.use((_, res) => {
     res.status(404).json({ error: "Route not found" });
   });
@@ -85,7 +75,6 @@ export function createApp() {
   /*
    ERROR HANDLER
   */
-
   app.use(errorMiddleware);
 
   return app;
