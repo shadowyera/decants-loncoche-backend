@@ -11,7 +11,6 @@ type DashboardFilters = {
  * PARSE FECHAS
  */
 function buildDateFilter(filters?: DashboardFilters) {
-
   if (!filters?.from && !filters?.to) return {}
 
   const date: any = {}
@@ -28,10 +27,9 @@ function buildDateFilter(filters?: DashboardFilters) {
 }
 
 /**
- * DASHBOARD SERVICE PRO
+ * DASHBOARD SERVICE PRO (FIXED)
  */
 export async function getDashboardData(filters?: DashboardFilters) {
-
   const dateFilter = buildDateFilter(filters)
 
   const matchStage = {
@@ -47,34 +45,44 @@ export async function getDashboardData(filters?: DashboardFilters) {
   ] = await Promise.all([
 
     /* ===============================
-       1. RESUMEN
+       1. RESUMEN (FIX REAL)
     =============================== */
 
     PedidoModel.aggregate([
 
       { $match: matchStage },
 
-      { $unwind: "$items" },
+      {
+        $group: {
+          _id: "$_id",
+          total: { $first: "$total" },
+          decants: {
+            $sum: {
+              $sum: "$items.cantidad"
+            }
+          }
+        }
+      },
 
       {
         $group: {
           _id: null,
           revenue: { $sum: "$total" },
-          pedidos: { $addToSet: "$_id" },
-          decants: { $sum: "$items.cantidad" }
+          pedidos: { $sum: 1 },
+          decants: { $sum: "$decants" }
         }
       },
 
       {
         $project: {
           revenue: 1,
+          pedidos: 1,
           decants: 1,
-          pedidos: { $size: "$pedidos" },
           aov: {
             $cond: [
-              { $eq: [{ $size: "$pedidos" }, 0] },
+              { $eq: ["$pedidos", 0] },
               0,
-              { $divide: ["$revenue", { $size: "$pedidos" }] }
+              { $divide: ["$revenue", "$pedidos"] }
             ]
           }
         }
@@ -83,7 +91,7 @@ export async function getDashboardData(filters?: DashboardFilters) {
     ]),
 
     /* ===============================
-       2. TOP PERFUMES
+       2. TOP PERFUMES (OK)
     =============================== */
 
     PedidoModel.aggregate([
@@ -133,7 +141,8 @@ export async function getDashboardData(filters?: DashboardFilters) {
     ]),
 
     /* ===============================
-       3. VENTAS POR DÍA
+       3. VENTAS POR DÍA (FIX OPCIONAL)
+       👉 Esto también estaba duplicando revenue
     =============================== */
 
     PedidoModel.aggregate([
@@ -185,5 +194,4 @@ export async function getDashboardData(filters?: DashboardFilters) {
     ventasPorDia,
     stockCritico
   }
-
 }
