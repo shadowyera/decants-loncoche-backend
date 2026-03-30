@@ -10,7 +10,9 @@ const mapaFamilias: Record<string, string[]> = {
     "caramelo",
     "coco",
     "chocolate",
-    "azucar"
+    "azucar",
+    "miel",
+    "praline"
   ],
 
   citrico: [
@@ -18,7 +20,17 @@ const mapaFamilias: Record<string, string[]> = {
     "bergamota",
     "naranja",
     "pomelo",
-    "mandarina"
+    "mandarina",
+    "toronja"
+  ],
+
+  frutal: [
+    "manzana",
+    "pera",
+    "durazno",
+    "ciruela",
+    "frutas",
+    "frutal"
   ],
 
   amaderado: [
@@ -26,36 +38,93 @@ const mapaFamilias: Record<string, string[]> = {
     "sandalo",
     "vetiver",
     "abedul",
-    "maderas"
+    "madera",
+    "oud",
+    "patchouli"
   ],
 
   floral: [
     "jazmin",
     "rosa",
     "iris",
-    "lavanda"
+    "lavanda",
+    "mimosa",
+    "loto",
+    "flor",
+    "azahar"
   ],
 
   fresco: [
     "bambu",
     "menta",
     "jengibre",
-    "notas verdes"
+    "verde",
+    "aire",
+    "limpio"
+  ],
+
+  especiado: [
+    "canela",
+    "pimienta",
+    "cardamomo",
+    "clavo",
+    "nuez moscada",
+    "especias"
   ],
 
   tropical: [
     "piña",
     "coco",
-    "mango"
+    "mango",
+    "maracuya"
   ],
 
   ambarado: [
     "ambar",
-    "ambar gris"
+    "ambar gris",
+    "resina"
   ],
 
   almizclado: [
     "almizcle"
+  ],
+
+  acuatico: [
+    "acuatico",
+    "marino",
+    "sal",
+    "algas",
+    "agua"
+  ],
+
+  verde: [
+    "verde",
+    "hojas",
+    "hierba",
+    "galbano"
+  ],
+
+  cuero: [
+    "cuero"
+  ],
+
+  tabaco: [
+    "tabaco"
+  ],
+
+  gourmand: [
+    "vainilla",
+    "caramelo",
+    "chocolate",
+    "cafe",
+    "praline"
+  ],
+
+  aromatico: [
+    "lavanda",
+    "romero",
+    "salvia",
+    "tomillo"
   ]
 
 }

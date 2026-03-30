@@ -25,9 +25,52 @@ function generarSlugPerfume(marca: string, nombre: string) {
   })
 }
 
+/**
+ * 🔥 Normalizar notas (trim + sin duplicados)
+ */
+function normalizarNotas(notas?: string[]) {
+  if (!notas) return []
+
+  return [...new Set(
+    notas.map(n => n.trim()).filter(Boolean)
+  )]
+}
+
+/**
+ * 🔥 Clasificación con orden + límite (UX ready)
+ */
 function calcularFamilias(notas?: string[]) {
   if (!notas || notas.length === 0) return []
-  return clasificarFamilias(notas)
+
+  const familias = clasificarFamilias(notas)
+
+  const prioridad = [
+    "dulce",
+    "fresco",
+    "acuatico",
+    "tropical",
+    "citrico",
+    "frutal",
+    "amaderado",
+    "ambarado",
+    "almizclado",
+    "floral",
+    "especiado",
+    "gourmand",
+    "aromatico",
+    "verde",
+    "cuero",
+    "tabaco"
+  ]
+
+  const ordenadas = [...familias].sort((a, b) => {
+    const indexA = prioridad.indexOf(a)
+    const indexB = prioridad.indexOf(b)
+
+    return (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB)
+  })
+
+  return ordenadas.slice(0, 4)
 }
 
 /**
@@ -76,18 +119,18 @@ export async function crearPerfume(data: CrearPerfumeInput) {
     throw new ApiError(400, "El perfume ya existe")
   }
 
-  // 🔥 SKU GENERADO Y GARANTIZADO ÚNICO
   const baseSku = await generarSkuUnico(data.marca, data.nombre)
 
-  const familiasOlfativas = calcularFamilias(data.notas)
+  const notasNormalizadas = normalizarNotas(data.notas)
+  const familiasOlfativas = calcularFamilias(notasNormalizadas)
 
   const perfume = await PerfumeModel.create({
     ...data,
+    notas: notasNormalizadas,
     slug,
     baseSku,
     familiasOlfativas,
 
-    /* defaults negocio */
     mlBotella: data.mlBotella ?? 100,
     multiplicadorDecant: data.multiplicadorDecant ?? 1.8
   })
@@ -158,7 +201,9 @@ export async function actualizarPerfume(
   Object.assign(perfume, data)
 
   if (data.notas) {
-    perfume.familiasOlfativas = clasificarFamilias(data.notas)
+    const notasNormalizadas = normalizarNotas(data.notas)
+    perfume.notas = notasNormalizadas
+    perfume.familiasOlfativas = calcularFamilias(notasNormalizadas)
   }
 
   await perfume.save()
