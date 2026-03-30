@@ -8,7 +8,7 @@ async function start() {
   const app = createApp();
 
   app.listen(env.PORT, () => {
-    console.log(`Servidor corriendo en puerto ${env.PORT}`);
+    console.log(`🚀 Servidor corriendo en puerto ${env.PORT}`);
   });
 }
 

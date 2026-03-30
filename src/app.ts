@@ -1,6 +1,5 @@
 import express from "express";
 import cors from "cors";
-// import path from "path"; ❌ ya no necesario si eliminas uploads
 
 import { errorMiddleware } from "./shared/middleware/error.middleware";
 
@@ -14,9 +13,13 @@ export function createApp() {
   const app = express();
 
   /*
-   CORS CONFIG
+   🔥 IMPORTANTE: PROXY (Render, Railway, etc.)
   */
+  app.set("trust proxy", 1);
 
+  /*
+   🌐 CORS CONFIG (seguro + controlado)
+  */
   const allowedOrigins = [
     "http://localhost:5173",
     "http://localhost:3000",
@@ -27,13 +30,15 @@ export function createApp() {
 
   const corsOptions: cors.CorsOptions = {
     origin: (origin, callback) => {
+      // permitir requests sin origin (Postman, mobile apps)
       if (!origin) return callback(null, true);
 
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
 
-      return callback(null, true); // abierto por ahora
+      // ❌ bloquear otros
+      return callback(new Error("Not allowed by CORS"));
     },
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -43,49 +48,35 @@ export function createApp() {
   app.use(cors(corsOptions));
 
   /*
-   BODY PARSER
+   📦 BODY PARSER
   */
-
   app.use(express.json());
 
   /*
-   ⚠️ uploads ya no necesarios con Cloudinary
+   ❤️ HEALTH CHECK
   */
-
-  // app.use(
-  //   "/uploads",
-  //   express.static(path.resolve(process.cwd(), "uploads"))
-  // );
-
-  /*
-   HEALTH CHECK
-  */
-
   app.get("/health", (_, res) => {
     res.json({ status: "ok" });
   });
 
   /*
-   API ROUTES
+   🚀 API ROUTES
   */
-
   app.use("/api/catalogo", catalogoRoutes);
   app.use("/api/pedidos", pedidoRoutes);
   app.use("/api/auth", authRoutes);
   app.use("/api/admin", adminRoutes);
 
   /*
-   404
+   ❌ 404
   */
-
   app.use((_, res) => {
     res.status(404).json({ error: "Route not found" });
   });
 
   /*
-   ERROR HANDLER
+   🧯 ERROR HANDLER
   */
-
   app.use(errorMiddleware);
 
   return app;
