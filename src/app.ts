@@ -70,7 +70,7 @@ export function createApp() {
   };
 
   // ✅ manejar preflight SIEMPRE
-  app.options("*", cors(corsOptions));
+  app.options(/.*/, cors(corsOptions));
 
   // ✅ aplicar CORS global
   app.use(cors(corsOptions));
