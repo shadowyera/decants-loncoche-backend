@@ -17,30 +17,44 @@ export interface CatalogoProducto {
   id: string
 
   marca: string
-
   nombre: string
-
   slug: string
 
   imagen?: string
-
   descripcion?: string
 
-  notas?: string[]
+  /* ======================
+     PERFUME INFO
+  ====================== */
 
+  notas?: string[]
   familiasOlfativas?: string[]
 
-  precioDesde: number
+  /* ======================
+     PRECIOS
+  ====================== */
 
+  precioDesde: number
   precioHasta: number
 
-  stockTotal: number
+  /* ======================
+     STOCK
+  ====================== */
 
+  stockTotal: number
   disponible: boolean
 
-  nuevo?: boolean
+  /* ======================
+     BADGES
+  ====================== */
 
-  pocoStock?: boolean
+  nuevo: boolean
+  pocoStock: boolean
+  masVendido: boolean
+
+  /* ======================
+     DECANTS
+  ====================== */
 
   decants: CatalogoDecant[]
 

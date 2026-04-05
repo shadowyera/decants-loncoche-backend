@@ -10,11 +10,7 @@ export async function obtenerCatalogo(): Promise<CatalogoProducto[]> {
 
   const catalogo = await PerfumeModel.aggregate([
 
-    {
-      $match: {
-        activo: true
-      }
-    },
+    { $match: { activo: true } },
 
     /**
      * DECANTS
@@ -35,7 +31,24 @@ export async function obtenerCatalogo(): Promise<CatalogoProducto[]> {
           $filter: {
             input: "$decants",
             as: "d",
-            cond: { $eq: ["$$d.activo", true] }
+            cond: {
+              $and: [
+                { $eq: ["$$d.activo", true] },
+                { $gt: ["$$d.precio", 0] }
+              ]
+            }
+          }
+        }
+      }
+    },
+
+    // 🔥 ORDENAR DECANTS
+    {
+      $addFields: {
+        decants: {
+          $sortArray: {
+            input: "$decants",
+            sortBy: { ml: 1 }
           }
         }
       }
@@ -54,7 +67,7 @@ export async function obtenerCatalogo(): Promise<CatalogoProducto[]> {
     },
 
     /**
-     * OBTENER VENTAS DESDE PEDIDOS
+     * VENTAS
      */
 
     {
@@ -64,7 +77,6 @@ export async function obtenerCatalogo(): Promise<CatalogoProducto[]> {
         pipeline: [
 
           { $match: { estado: "PAGADO" } },
-
           { $unwind: "$items" },
 
           {
@@ -98,10 +110,6 @@ export async function obtenerCatalogo(): Promise<CatalogoProducto[]> {
       }
     },
 
-    /**
-     * CONVERTIR VENTAS A NÚMERO
-     */
-
     {
       $addFields: {
         ventas: {
@@ -114,19 +122,15 @@ export async function obtenerCatalogo(): Promise<CatalogoProducto[]> {
     },
 
     /**
-     * BADGES Y DISPONIBILIDAD
+     * BADGES
      */
 
     {
       $addFields: {
 
-        disponible: {
-          $gt: ["$stockTotal", 0]
-        },
+        disponible: { $gt: ["$stockTotal", 0] },
 
-        pocoStock: {
-          $lte: ["$stockTotal", 5]
-        },
+        pocoStock: { $lte: ["$stockTotal", 5] },
 
         nuevo: {
           $gte: [
@@ -135,15 +139,13 @@ export async function obtenerCatalogo(): Promise<CatalogoProducto[]> {
           ]
         },
 
-        masVendido: {
-          $gte: ["$ventas", 5]
-        }
+        masVendido: { $gte: ["$ventas", 5] }
 
       }
     },
 
     /**
-     * FORMATEAR RESPUESTA
+     * RESPONSE
      */
 
     {
@@ -190,167 +192,4 @@ export async function obtenerCatalogo(): Promise<CatalogoProducto[]> {
   ])
 
   return catalogo
-}
-
-
-/**
- * OBTENER PRODUCTO POR SLUG
- */
-
-export async function obtenerProductoPorSlug(slug: string) {
-
-  const producto = await PerfumeModel.aggregate([
-
-    {
-      $match: {
-        slug,
-        activo: true
-      }
-    },
-
-    {
-      $lookup: {
-        from: "decants",
-        localField: "_id",
-        foreignField: "perfumeId",
-        as: "decants"
-      }
-    },
-
-    {
-      $addFields: {
-        decants: {
-          $filter: {
-            input: "$decants",
-            as: "d",
-            cond: { $eq: ["$$d.activo", true] }
-          }
-        }
-      }
-    },
-
-    {
-      $project: {
-
-        id: { $toString: "$_id" },
-
-        marca: 1,
-        nombre: 1,
-        slug: 1,
-        imagen: 1,
-
-        descripcion: 1,
-        notas: 1,
-        familiasOlfativas: 1,
-
-        decants: {
-          $map: {
-            input: "$decants",
-            as: "d",
-            in: {
-              id: { $toString: "$$d._id" },
-              ml: "$$d.ml",
-              precio: "$$d.precio",
-              stockDisponible: "$$d.stockDisponible",
-              sku: "$$d.sku"
-            }
-          }
-        }
-
-      }
-    }
-
-  ])
-
-  if (!producto.length) {
-    throw new ApiError(404, "Producto no encontrado")
-  }
-
-  return producto[0]
-}
-
-
-/**
- * RECOMENDACIONES
- */
-
-export async function obtenerRecomendaciones(slug: string) {
-
-  const perfume = await PerfumeModel.findOne({
-    slug,
-    activo: true
-  })
-
-  if (!perfume) {
-    throw new ApiError(404, "Perfume no encontrado")
-  }
-
-  const recomendaciones = await PerfumeModel.aggregate([
-
-    {
-      $match: {
-        activo: true,
-        slug: { $ne: slug },
-        familiasOlfativas: {
-          $in: perfume.familiasOlfativas || []
-        }
-      }
-    },
-
-    {
-      $lookup: {
-        from: "decants",
-        localField: "_id",
-        foreignField: "perfumeId",
-        as: "decants"
-      }
-    },
-
-    {
-      $addFields: {
-        decants: {
-          $filter: {
-            input: "$decants",
-            as: "d",
-            cond: { $eq: ["$$d.activo", true] }
-          }
-        }
-      }
-    },
-
-    {
-      $addFields: {
-        precioDesde: { $min: "$decants.precio" },
-        precioHasta: { $max: "$decants.precio" },
-        stockTotal: { $sum: "$decants.stockDisponible" }
-      }
-    },
-
-    {
-      $addFields: {
-        disponible: { $gt: ["$stockTotal", 0] }
-      }
-    },
-
-    {
-      $project: {
-
-        id: { $toString: "$_id" },
-
-        marca: 1,
-        nombre: 1,
-        slug: 1,
-        imagen: 1,
-
-        precioDesde: 1,
-        disponible: 1
-
-      }
-    },
-
-    { $limit: 4 }
-
-  ])
-
-  return recomendaciones
 }
